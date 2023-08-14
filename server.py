@@ -2,8 +2,11 @@ from scapy.all import Ether, sendp
 import socket
 import bcrypt
 import random
+import sys
+import os
+import time
+import threading
 
-#/bin/python /home/Shuvo/wifi/server.py
 #----------------------Get IP------------------------------------------
 def get_network_ip():
     try:
@@ -37,20 +40,23 @@ def authenticate(client_socket):
         print("Authentication Failed")
         return False
 #----------------------------------------------------------------------
+host = get_network_ip()      #IP from function
+port = int(random.randint(1234, 1234))  #Generate Random port
+def broadcast():
+    while True:
+        payload_data = f"{host},{port},"     #Make frame payload
+        ethernet_frame = Ether(src='00:0c:29:1a:1d:3a', dst='ff:ff:ff:ff:ff:ff') / payload_data
+
+        sendp(ethernet_frame, iface='eth0', count=2)   #broadcast the payload
+        time.sleep(3)
+
 
 def main():
-    host = get_network_ip()      #IP from function
-    port = int(random.randint(12345, 12345))  #Generate Random port
-
-    payload_data = f"{host},{port},"     #Make frame payload
-    ethernet_frame = Ether(src='00:0c:29:1a:1d:3a', dst='ff:ff:ff:ff:ff:ff') / payload_data
-    sendp(ethernet_frame, iface='eth0', count=1)   #broadcast the payload
 
 #---------Create a server-------------------------------------------
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
-    server_socket.listen(1)
-
+    server_socket.listen()
     print("Server listening on", host, port)
 
     client_socket, client_address = server_socket.accept()
@@ -70,4 +76,7 @@ def main():
     server_socket.close()
 
 if __name__ == "__main__":
+    background_thread = threading.Thread(target=broadcast)
+    background_thread.daemon = True
+    background_thread.start()
     main()

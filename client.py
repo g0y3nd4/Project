@@ -3,9 +3,8 @@ import getpass
 import re
 from scapy.all import sniff, Ether
 
-#/bin/python3 /home/user/test/client.py
-#---------------Analyisis packet & ex Ip and Port-------
-port=''
+port = ''
+
 stop_sniffing = False
 def packet_handler(packet):
     global ip_address
@@ -26,8 +25,6 @@ def packet_handler(packet):
                 stop_sniffing = True
             else:
                 print("No match.")
-
-#-----------------------------------------------------------------------------------------
 def discovery_type():
     global ip_address
     global port
@@ -36,7 +33,7 @@ def discovery_type():
     if choose == "1":
         print("Trying to auto Server discovery")
         #----------------------Capture broadcast frame-------------------------------------------
-        sniff(iface='ens33', prn=packet_handler, stop_filter=lambda pkt: stop_sniffing, count=1000)
+        sniff(iface='Ethernet', prn=packet_handler, stop_filter=lambda pkt: stop_sniffing, count=1000)
     elif choose == "2":
         ip_address = input("Enter the server ip address:")
         port = input("Enter the port number:")
@@ -44,18 +41,17 @@ def discovery_type():
     else:
         print("You choose a wrong options. Try again")
 
-
-#------------------------------------------------------------------------------------------
 def main():
     discovery_type()
-#----------------Create clint---------------------------------------------
     port_int = int((port))
+    addr=(ip_address, port_int)
+# Create a socket and connect to the server
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((ip_address, port_int))
+    client_socket.connect(addr)
 
 #---------------Authentication------------------------------------
     authenticated = False
-    while not authenticated:
+    if not authenticated:
         print(client_socket.recv(1024).decode())
         password =getpass.getpass("Enter your password: ")
         client_socket.send(password.encode())
@@ -67,17 +63,22 @@ def main():
         else:
             print("Authentication Failed. Please try again.")
 #--------------------Communicate with server--------------------------
-    while True:
-        message = input("Enter Message ('exit' to quit): ")
-        client_socket.send(message.encode())
+    if authenticated:
+        while True:
+            message = input("Enter Message ('exit' to quit): ")
+            client_socket.send(message.encode())
 
-        if message.lower() == "exit":
-            break
+            if message.lower() == "exit":
+                print("Client shutting down...")
+                break
 
-        reply = client_socket.recv(1024).decode()
-        print("Server Reply:", reply)
+            reply = client_socket.recv(1024).decode()
+            print("Server Reply:", reply)
 
-    client_socket.close()
+        client_socket.close()
+    else:
+        client_socket.close()
 
+#---------------------------------------------------------------------
 if __name__ == "__main__":
     main()

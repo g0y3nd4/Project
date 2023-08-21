@@ -1,3 +1,12 @@
-# Project
-#Ethernet Server:
-It' a server programm that made using pyhton. 
+# Server-Client Program using python
+## Server Program for Ethernet Connection:
+*
+*
+*
+*
+
+## Client Program for Ethernet Connection:
+*
+*
+*
+*
